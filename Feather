@@ -1,0 +1,77 @@
+#!/bin/bash
+
+set -e
+
+function Build() {
+	mkdir -p $PROJECT/bin/Root/{proc,dev,sbin,bin,root,home,etc,usr,var,lib,lib64,mnt,run,srv,opt,boot,sys,tmp}
+	mkdir -p $PROJECT/cache/{Download,Build}
+
+	wget 'https://busybox.net/downloads/busybox-1.35.0.tar.bz2' -O "$PROJECT/cache/Download/busybox.tar.bz2"
+
+}
+
+function SettingEnv() {
+	LANGA=C
+	PROJECT=$(pwd)
+	OS=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
+}
+
+function CheckEnv() {
+	if [ "$OS" != '"Arch Linux ARM"' ]; then
+		echo -e "\e[1;31m Error: \e[0m Feather can not be compiled on non-Arch Linux ARM"
+		exit 3
+	fi
+
+	
+	if [ ! -d "$PROJECT/source" ]; then
+		echo -e "\e[1;31m Error: \e[0m The Directory '$project/source' could not be found"
+		exit 2
+	fi
+}
+
+function FeatherBuild() {
+	case $1 in
+		build/Build)
+			echo "Start Build!"
+			Build
+			echo "Build Done!"
+		;;
+		clean|Clean)
+			echo "Cleaning up..."
+		    rm -rf $PROJECT/bin
+			rm -rf $PROJECT/cache
+			echo "Done"
+		;;
+		installenv|InstallEnv)
+		    pacman -Syyu clang gcc gdb git make cmake tar wget busybox gnupg llvm
+		;;
+		help|Help)
+			echo "Use: ./Feather [Args]"
+			echo "	Args:"
+			echo "		Help: View help information"
+			echo "		Build: Compile Feather"
+			echo "		Clean: Clean up the cache and compile results"
+			echo "		USource: Release the source code"
+		;;
+		Download|download)
+			Download
+		;;
+		*)
+			if [[ ! $1 ]]; then
+				echo -e "\e[1;31m Error: \e[0m The parameter could not be found. Use the help parameter to view help"
+			else
+				echo -e "\e[1;31m Error: \e[0m The parameter '$1' could not be found, so use the help parameter to view help"
+			fi
+			exit 0
+		;;
+	esac
+
+}
+SettingEnv
+
+CheckEnv
+
+FeatherBuild $1
+
+exit 0
+
